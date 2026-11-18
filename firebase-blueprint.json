@@ -1,0 +1,307 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated collector account and shipping address profile.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the account owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Collector display name.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified account email address.",
+          "minLength": 3,
+          "maxLength": 150
+        },
+        "phone": {
+          "type": "string",
+          "description": "10-digit Indian mobile number or international phone.",
+          "minLength": 10,
+          "maxLength": 15,
+          "pattern": "^[0-9+\\-\\s]{10,15}$"
+        },
+        "address": {
+          "type": "string",
+          "description": "Street shipping address.",
+          "minLength": 5,
+          "maxLength": 300
+        },
+        "city": {
+          "type": "string",
+          "description": "Shipping city.",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "pincode": {
+          "type": "string",
+          "description": "6-digit postal PIN code.",
+          "minLength": 6,
+          "maxLength": 6,
+          "pattern": "^[0-9]{6}$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": ["uid", "displayName", "email", "createdAt", "updatedAt"]
+    },
+    "CartItem": {
+      "title": "CartItem",
+      "description": "Persistent shopping bag line item belonging to an authenticated user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Catalog product identifier.",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Product title.",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "variant": {
+          "type": "string",
+          "description": "Selected edition, finish, or scale label.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "image": {
+          "type": "string",
+          "description": "Relative asset path or image URL.",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "unitPriceInr": {
+          "type": "number",
+          "description": "Unit price in INR."
+        },
+        "qty": {
+          "type": "number",
+          "description": "Item quantity (1 to 20)."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": ["userId", "productId", "title", "variant", "image", "unitPriceInr", "qty", "updatedAt"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order paid via direct UPI transfer to 9311635332@fam with submitted UTR reference.",
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "Unique order reference code.",
+          "minLength": 4,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Buyer Firebase Auth UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "buyerName": {
+          "type": "string",
+          "description": "Recipient full name.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "buyerEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Buyer email address.",
+          "minLength": 3,
+          "maxLength": 150
+        },
+        "buyerPhone": {
+          "type": "string",
+          "description": "Buyer phone number.",
+          "minLength": 10,
+          "maxLength": 15,
+          "pattern": "^[0-9+\\-\\s]{10,15}$"
+        },
+        "shippingAddress": {
+          "type": "string",
+          "description": "Delivery street address.",
+          "minLength": 5,
+          "maxLength": 300
+        },
+        "shippingCity": {
+          "type": "string",
+          "description": "Delivery city.",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "shippingPincode": {
+          "type": "string",
+          "description": "6-digit delivery PIN code.",
+          "minLength": 6,
+          "maxLength": 6,
+          "pattern": "^[0-9]{6}$"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": ["UPI_FAM"],
+          "description": "Payment method identifier."
+        },
+        "upiVpa": {
+          "type": "string",
+          "enum": ["9311635332@fam"],
+          "description": "Destination merchant UPI VPA."
+        },
+        "utrReference": {
+          "type": "string",
+          "description": "12-digit or alphanumeric UPI UTR / transaction reference submitted by buyer.",
+          "minLength": 10,
+          "maxLength": 24,
+          "pattern": "^[A-Za-z0-9]{10,24}$"
+        },
+        "totalInr": {
+          "type": "number",
+          "description": "Order total in INR."
+        },
+        "itemCount": {
+          "type": "number",
+          "description": "Total number of items in the order."
+        },
+        "itemsSummary": {
+          "type": "string",
+          "description": "Human-readable line-item summary for order history display.",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending_verification"],
+          "description": "Initial order payment verification status."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        }
+      },
+      "required": [
+        "orderId",
+        "userId",
+        "buyerName",
+        "buyerEmail",
+        "buyerPhone",
+        "shippingAddress",
+        "shippingCity",
+        "shippingPincode",
+        "paymentMethod",
+        "upiVpa",
+        "utrReference",
+        "totalInr",
+        "itemCount",
+        "itemsSummary",
+        "status",
+        "createdAt"
+      ]
+    },
+    "OrderItem": {
+      "title": "OrderItem",
+      "description": "Individual purchased item record inside an order subcollection.",
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "Parent order ID.",
+          "minLength": 4,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Catalog product ID.",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Item title.",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "variant": {
+          "type": "string",
+          "description": "Selected variant.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "unitPriceInr": {
+          "type": "number",
+          "description": "Unit price in INR."
+        },
+        "qty": {
+          "type": "number",
+          "description": "Quantity purchased."
+        }
+      },
+      "required": ["orderId", "userId", "productId", "title", "variant", "unitPriceInr", "qty"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private collector profile and default shipping details."
+    },
+    "/users/{userId}/cartItems/{itemId}": {
+      "schema": { "$ref": "#/entities/CartItem" },
+      "description": "Persistent shopping bag line items for the authenticated user."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Immutable UPI order receipts linked to the buyer's userId."
+    },
+    "/orders/{orderId}/items/{itemId}": {
+      "schema": { "$ref": "#/entities/OrderItem" },
+      "description": "Line items belonging to a specific order."
+    }
+  }
+}

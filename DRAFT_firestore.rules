@@ -1,0 +1,247 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'displayName', 'email', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'email', 'phone', 'address', 'city', 'pincode', 'createdAt', 'updatedAt'])
+        && data.uid is string
+        && data.uid == userId
+        && data.uid == request.auth.uid
+        && data.uid.size() >= 1
+        && data.uid.size() <= 128
+        && data.displayName is string
+        && data.displayName.size() >= 1
+        && data.displayName.size() <= 100
+        && data.email is string
+        && data.email.size() >= 3
+        && data.email.size() <= 150
+        && (!('phone' in data) || (data.phone is string && data.phone.size() >= 10 && data.phone.size() <= 15 && data.phone.matches('^[0-9+\\-\\s]{10,15}$')))
+        && (!('address' in data) || (data.address is string && data.address.size() >= 5 && data.address.size() <= 300))
+        && (!('city' in data) || (data.city is string && data.city.size() >= 2 && data.city.size() <= 80))
+        && (!('pincode' in data) || (data.pincode is string && data.pincode.size() == 6 && data.pincode.matches('^[0-9]{6}$')))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCartItem(data, userId) {
+      return data.keys().hasAll(['userId', 'productId', 'title', 'variant', 'image', 'unitPriceInr', 'qty', 'updatedAt'])
+        && data.keys().hasOnly(['userId', 'productId', 'title', 'variant', 'image', 'unitPriceInr', 'qty', 'updatedAt'])
+        && data.userId is string
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && data.userId.size() >= 1
+        && data.userId.size() <= 128
+        && data.productId is string
+        && data.productId.size() >= 1
+        && data.productId.size() <= 80
+        && data.productId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.title is string
+        && data.title.size() >= 1
+        && data.title.size() <= 140
+        && data.variant is string
+        && data.variant.size() >= 1
+        && data.variant.size() <= 120
+        && data.image is string
+        && data.image.size() >= 1
+        && data.image.size() <= 300
+        && data.unitPriceInr is number
+        && data.unitPriceInr > 0
+        && data.unitPriceInr <= 500000
+        && data.qty is number
+        && data.qty >= 1
+        && data.qty <= 20
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidOrder(data, orderId) {
+      return data.keys().hasAll([
+          'orderId', 'userId', 'buyerName', 'buyerEmail', 'buyerPhone',
+          'shippingAddress', 'shippingCity', 'shippingPincode',
+          'paymentMethod', 'upiVpa', 'utrReference', 'totalInr',
+          'itemCount', 'itemsSummary', 'status', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'orderId', 'userId', 'buyerName', 'buyerEmail', 'buyerPhone',
+          'shippingAddress', 'shippingCity', 'shippingPincode',
+          'paymentMethod', 'upiVpa', 'utrReference', 'totalInr',
+          'itemCount', 'itemsSummary', 'status', 'createdAt'
+        ])
+        && data.orderId is string
+        && data.orderId == orderId
+        && data.orderId.size() >= 4
+        && data.orderId.size() <= 64
+        && data.orderId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.userId is string
+        && data.userId == request.auth.uid
+        && data.userId.size() >= 1
+        && data.userId.size() <= 128
+        && data.buyerName is string
+        && data.buyerName.size() >= 1
+        && data.buyerName.size() <= 100
+        && data.buyerEmail is string
+        && data.buyerEmail.size() >= 3
+        && data.buyerEmail.size() <= 150
+        && data.buyerPhone is string
+        && data.buyerPhone.size() >= 10
+        && data.buyerPhone.size() <= 15
+        && data.buyerPhone.matches('^[0-9+\\-\\s]{10,15}$')
+        && data.shippingAddress is string
+        && data.shippingAddress.size() >= 5
+        && data.shippingAddress.size() <= 300
+        && data.shippingCity is string
+        && data.shippingCity.size() >= 2
+        && data.shippingCity.size() <= 80
+        && data.shippingPincode is string
+        && data.shippingPincode.size() == 6
+        && data.shippingPincode.matches('^[0-9]{6}$')
+        && data.paymentMethod is string
+        && data.paymentMethod == 'UPI_FAM'
+        && data.upiVpa is string
+        && data.upiVpa == '9311635332@fam'
+        && data.utrReference is string
+        && data.utrReference.size() >= 10
+        && data.utrReference.size() <= 24
+        && data.utrReference.matches('^[A-Za-z0-9]{10,24}$')
+        && data.totalInr is number
+        && data.totalInr > 0
+        && data.totalInr <= 5000000
+        && data.itemCount is number
+        && data.itemCount >= 1
+        && data.itemCount <= 100
+        && data.itemsSummary is string
+        && data.itemsSummary.size() >= 1
+        && data.itemsSummary.size() <= 1000
+        && data.status is string
+        && data.status == 'pending_verification'
+        && data.createdAt is timestamp;
+    }
+
+    function isValidOrderItem(data, orderId) {
+      return data.keys().hasAll(['orderId', 'userId', 'productId', 'title', 'variant', 'unitPriceInr', 'qty'])
+        && data.keys().hasOnly(['orderId', 'userId', 'productId', 'title', 'variant', 'unitPriceInr', 'qty'])
+        && data.orderId is string
+        && data.orderId == orderId
+        && data.orderId.size() >= 4
+        && data.orderId.size() <= 64
+        && data.orderId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.userId is string
+        && data.userId == request.auth.uid
+        && data.userId.size() >= 1
+        && data.userId.size() <= 128
+        && data.productId is string
+        && data.productId.size() >= 1
+        && data.productId.size() <= 80
+        && data.productId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.title is string
+        && data.title.size() >= 1
+        && data.title.size() <= 140
+        && data.variant is string
+        && data.variant.size() >= 1
+        && data.variant.size() <= 120
+        && data.unitPriceInr is number
+        && data.unitPriceInr > 0
+        && data.unitPriceInr <= 500000
+        && data.qty is number
+        && data.qty >= 1
+        && data.qty <= 20;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName', 'email', 'phone', 'address', 'city', 'pincode', 'updatedAt'
+        ]);
+      allow delete: if false;
+
+      match /cartItems/{itemId} {
+        allow get: if isValidId(userId) && isValidId(itemId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.userId == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(itemId)
+          && isOwner(userId)
+          && isValidCartItem(incoming(), userId)
+          && incoming().updatedAt == request.time;
+        allow update: if isValidId(userId)
+          && isValidId(itemId)
+          && isOwner(userId)
+          && isValidCartItem(incoming(), userId)
+          && incoming().userId == existing().userId
+          && incoming().productId == existing().productId
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'qty', 'variant', 'unitPriceInr', 'title', 'image', 'updatedAt'
+          ]);
+        allow delete: if isValidId(userId) && isValidId(itemId) && isOwner(userId);
+      }
+    }
+
+    match /orders/{orderId} {
+      allow get: if isValidId(orderId) && isVerifiedUser() && existing().userId == request.auth.uid;
+      allow list: if isVerifiedUser() && resource.data.userId == request.auth.uid;
+      allow create: if isValidId(orderId)
+        && isVerifiedUser()
+        && isValidOrder(incoming(), orderId)
+        && incoming().createdAt == request.time;
+      allow update, delete: if false;
+
+      match /items/{itemId} {
+        allow get: if isValidId(orderId)
+          && isValidId(itemId)
+          && isVerifiedUser()
+          && get(/databases/$(database)/documents/orders/$(orderId)).data.userId == request.auth.uid;
+        allow list: if isValidId(orderId)
+          && isVerifiedUser()
+          && resource.data.userId == request.auth.uid;
+        allow create: if isValidId(orderId)
+          && isValidId(itemId)
+          && isVerifiedUser()
+          && isValidOrderItem(incoming(), orderId)
+          && existsAfter(/databases/$(database)/documents/orders/$(orderId))
+          && getAfter(/databases/$(database)/documents/orders/$(orderId)).data.userId == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+  }
+}
